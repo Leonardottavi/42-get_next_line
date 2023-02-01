@@ -6,108 +6,93 @@
 /*   By: lottavi <lottavi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/01 17:07:06 by lottavi           #+#    #+#             */
-/*   Updated: 2023/02/01 17:07:19 by lottavi          ###   ########.fr       */
+/*   Updated: 2023/02/01 18:14:59 by lottavi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./get_next_line_bonus.h"
+#include "get_next_line_bonus.h"
 
-t_clist	*ft_newclist(t_clist *dic, int fd, char *buff)
+char	*ft_readed_line(char *start)
 {
-	t_clist	*elem;
+	int		i;
+	char	*line;
 
-	if (dic != NULL)
+	if (!start || !start[0])
+		return (NULL);
+	i = 0;
+	while (start[i] && start[i] != '\n')
+		i++;
+	if (start[i] == '\n')
+		i++;
+	line = (char *)malloc(1 + i * sizeof(char));
+	if (!line)
+		return (NULL);
+	i = 0;
+	while (start[i] && start[i] != '\n')
 	{
-		while (dic->next != NULL)
-			dic = dic->next;
-		elem = malloc(sizeof(t_clist));
-		if (!elem)
-			return (NULL);
-		elem->first = dic->first;
-		elem->buff = buff;
-		elem->fd = fd;
-		dic->next = elem;
+		line[i] = start[i];
+		i++;
 	}
-	else
-	{
-		elem = malloc(sizeof(t_clist));
-		if (!elem)
-			return (NULL);
-		elem->first = elem;
-		elem->buff = buff;
-		elem->fd = fd;
-		elem->next = NULL;
-	}
-	return (elem);
+	if (start[i] == '\n')
+		line[i++] = '\n';
+	line[i] = '\0';
+	return (line);
 }
 
-void	*ft_handler(t_clist *dic, int fd, char *buff, char meth)
+char	*ft_move_start(char	*start)
 {
-	if (meth == 'r')
+	char	*new_buff;
+	int		i;
+	int		j;
+
+	i = 0;
+	while (start[i] && start[i] != '\n')
+		i++;
+	if (start[i] == '\0')
 	{
-		if (dic == NULL)
-			return (NULL);
-		dic = dic->first;
-		while (dic->next != NULL)
-		{
-			if (fd == dic->fd)
-				return (dic->buff);
-			dic = dic->next;
-		}
+		free(start);
 		return (NULL);
 	}
-	else if (meth == 'c')
-		ft_newclist(dic, fd, buff);
-	else
-	{
-		dic = dic->first;
-		while (dic->fd != fd && dic->next != NULL)
-			dic = dic->next;
-		if (dic->fd == fd)
-			dic->buff = buff;
-	}
-	return (NULL);
-}
-
-char	*ft_recover(int fd, char *buff)
-{
-	char	*tmp_buff;
-	int		f;
-
-	tmp_buff = (char *) malloc(BUFFER_SIZE + 1);
-	if (!tmp_buff)
+	i += (start[i] == '\n');
+	new_buff = (char *)malloc(1 + ft_strlen(start) - i);
+	if (!new_buff)
 		return (NULL);
-	f = 1;
-	while ((ft_find_line(buff) == 0) && f != 0)
+	j = 0;
+	while (start[i + j])
 	{
-		f = read(fd, tmp_buff, BUFFER_SIZE);
-		if (f == -1)
-		{
-			free(tmp_buff);
-			return (NULL);
-		}
-		tmp_buff[f] = '\0';
-		buff = ft_strmerge(buff, tmp_buff);
+		new_buff[j] = start[i + j];
+		j++;
 	}
-	free(tmp_buff);
-	return (buff);
+	new_buff[j] = '\0';
+	free(start);
+	return (new_buff);
 }
 
 char	*get_next_line(int fd)
 {
-	char			*line;
-	static t_clist	*dic;
-	char			*buff;
+	char		*tmp;
+	int			fd_read;
+	static char	*start_str[1024] = {NULL};
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (0);
-	buff = ft_handler(dic, fd, "\0", 'r');
-	if (buff == NULL)
-		dic = ft_newclist(NULL, fd, buff);
-	buff = ft_recover(fd, buff);
-	if (!buff)
 		return (NULL);
-	line = ft_return_line(buff);
-	ft_handler(dic, fd, ft_prepare_next(buff), 'e');
-	return (line);
+	fd_read = 1;
+	tmp = (char *)malloc(1 + BUFFER_SIZE * sizeof(char));
+	if (!tmp)
+		return (NULL);
+	while (!(ft_strchr(start_str[fd], '\n')) && fd_read != 0)
+	{
+		fd_read = read(fd, tmp, BUFFER_SIZE);
+		if (fd_read == -1)
+		{
+			free(tmp);
+			return (NULL);
+		}
+		tmp[fd_read] = '\0';
+		start_str[fd] = ft_strjoin(start_str[fd], tmp);
+	}
+	free(tmp);
+	tmp = ft_readed_line(start_str[fd]);
+	start_str[fd] = ft_move_start(start_str[fd]);
+	return (tmp);
 }

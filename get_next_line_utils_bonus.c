@@ -6,117 +6,81 @@
 /*   By: lottavi <lottavi@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/01 17:09:07 by lottavi           #+#    #+#             */
-/*   Updated: 2023/02/01 17:09:15 by lottavi          ###   ########.fr       */
+/*   Updated: 2023/02/01 18:15:29 by lottavi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./get_next_line_bonus.h"
+#include "get_next_line_bonus.h"
 
-size_t	ft_strlen(char *s)
+size_t	ft_strlen(char	*str)
 {
 	size_t	i;
 
 	i = 0;
-	if (s == NULL)
+	if (!str)
 		return (0);
-	while (s[i] != '\0')
+	while (str[i])
 		i++;
 	return (i);
 }
 
-char	*ft_strmerge(char *buff, char *tmp_buff)
+char	*ft_strchr(char *s, int c)
+{
+	size_t	i;
+
+	if (!s)
+		return (NULL);
+	if (c == 0)
+	{
+		i = ft_strlen((char *)s);
+		return (&s[i]);
+	}
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] == (char) c)
+			return (&s[i]);
+		i++;
+	}
+	return (NULL);
+}
+
+char	*ft_strjoin(char *start, char *buff)
+{
+	char	*ptr;
+
+	if (!start)
+	{
+		start = (char *)malloc(1 * sizeof(char));
+		start[0] = '\0';
+	}
+	if (!start || !buff)
+		return (NULL);
+	ptr = (char *)malloc(1 + ft_strlen(start) + ft_strlen(buff) * sizeof(char));
+	if (!ptr)
+		return (NULL);
+	ptr = ft_join(ptr, start, buff);
+	free(start);
+	return (ptr);
+}
+
+char	*ft_join(char *dest, char *s1, char *s2)
 {
 	size_t	i;
 	size_t	j;
-	char	*s;
 
-	if (!buff)
+	i = 0;
+	while (s1 && s1[i])
 	{
-		buff = (char *) malloc(1);
-		buff[0] = '\0';
+		dest[i] = s1[i];
+		i++;
 	}
-	if (!buff || !tmp_buff)
-		return (NULL);
-	s = malloc((ft_strlen(buff) + ft_strlen(tmp_buff)) + 1);
-	if (!s)
-		return (NULL);
-	i = -1;
 	j = 0;
-	if (buff)
-		while (buff[++i] != '\0')
-			s[i] = buff[i];
-	while (tmp_buff[j] != '\0')
-		s[i++] = tmp_buff[j++];
-	s[i] = '\0';
-	free(buff);
-	return (s);
-}
-
-int	ft_find_line(char *s)
-{
-	int	i;
-
-	i = 0;
-	if (!s)
-		return (0);
-	while (s[i] != '\0')
+	while (s2 && s2[j])
 	{
-		if (s[i] == '\n')
-			return (1);
-		i++;
+		dest[i + j] = s2[j];
+		j++;
 	}
-	return (0);
-}
-
-char	*ft_return_line(char *buff)
-{
-	int		i;
-	char	*s;
-
-	i = 0;
-	if (!buff[i])
-		return (NULL);
-	while (buff[i] && buff[i] != '\n')
-		i++;
-	s = (char *)malloc(i + 2);
-	if (!s)
-		return (NULL);
-	i = 0;
-	while (buff[i] && buff[i] != '\n')
-	{
-		s[i] = buff[i];
-		i++;
-	}
-	if (buff[i] == '\n')
-	{
-		s[i] = buff[i];
-		i++;
-	}
-	s[i] = '\0';
-	return (s);
-}
-
-char	*ft_prepare_next(char *buff)
-{
-	int		i;
-	int		j;
-	char	*s;
-
-	i = 0;
-	while (buff[i] && buff[i] != '\n')
-		i++;
-	if (!buff[i])
-	{
-		free(buff);
-		return (NULL);
-	}
-	s = (char *)malloc((ft_strlen(buff) - i + 1));
-	if (!s)
-		return (NULL);
-	i++;
-	j = 0;
-	while (buff[i])
-		s[j++] = buff[i++];
-	s[j] = '\0';
-	return (s);
+	dest[i + j] = '\0';
+	return (dest);
 }
